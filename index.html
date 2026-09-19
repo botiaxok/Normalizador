@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Normalizador de Base de Datos - CX Core</title>
+    <title>Normalizador de Base de Datos - Botiax</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
+            --primary: #ff6b00;
+            --primary-hover: #e05e00;
+            --primary-light: #fff0e6;
             --bg-app: #f8fafc;
             --surface: #ffffff;
             --border: #e2e8f0;
@@ -26,62 +27,65 @@
         * { box-sizing: border-box; }
         body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: var(--bg-app); color: var(--text-main); margin: 0; padding: 30px 15px; }
         
-        .container { max-width: 1500px; margin: 0 auto; background: var(--surface); padding: 35px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+        .container { max-width: 1600px; margin: 0 auto; background: var(--surface); padding: 35px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
         
         .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--border); padding-bottom: 20px; margin-bottom: 25px; }
-        .header h1 { font-size: 24px; font-weight: 700; color: var(--text-main); margin: 0; }
+        .header-logo { height: 45px; object-fit: contain; }
+        .header-tag { font-size: 12px; font-weight: 700; color: var(--primary); background: var(--primary-light); padding: 6px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
         
-        /* Stepper */
         .stepper { display: flex; gap: 15px; margin-bottom: 25px; }
         .step-pill { flex: 1; padding: 12px; background: #f1f5f9; border-radius: 8px; font-size: 13px; font-weight: 600; color: var(--text-muted); text-align: center; border: 1px solid transparent; transition: all 0.2s; }
-        .step-pill.active { background: #e0e7ff; color: var(--primary); border-color: #c7d2fe; }
+        .step-pill.active { background: var(--primary-light); color: var(--primary); border-color: #ffd8bf; }
 
         .step { display: none; }
         .step.active { display: block; }
         
-        /* Buttons */
         .btn { background-color: var(--primary); color: white; padding: 10px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
         .btn:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
         .btn-success { background-color: var(--success); }
         .btn-success:hover { background-color: var(--success-hover); }
-        .btn-quick { background-color: #f97316; color: white; padding: 4px 8px; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; white-space: nowrap; }
+        .btn-quick { background-color: var(--primary); color: white; padding: 4px 8px; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; white-space: nowrap; }
+        .btn-quick:hover { background-color: var(--primary-hover); }
+        .btn-omit { background-color: #64748b; color: white; padding: 4px 8px; border: none; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; margin-left: 4px; }
+        .btn-omit:hover { background-color: #475569; }
         .btn-danger { background-color: var(--danger); color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
         .btn-icon { background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); padding: 5px 8px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
         .btn-icon:hover { background: #e2e8f0; }
 
-        /* Form Elements */
-        select, input[type="file"] { padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; width: 100%; background: #fff; }
-        select:focus, input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        select, input[type="file"], input[type="text"] { padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; background: #fff; }
+        select:focus, input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.15); }
         
-        /* Stats / Filters Bar */
         .filter-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .card-stat { background: #fff; border: 1px solid var(--border); padding: 15px; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
         .card-stat:hover { border-color: #cbd5e1; }
-        .card-stat.active { border-color: var(--primary); background-color: #f8fafc; box-shadow: 0 0 0 2px var(--primary); }
+        .card-stat.active { border-color: var(--primary); background-color: #fffaf7; box-shadow: 0 0 0 2px var(--primary); }
         .card-stat .title { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
         .card-stat .number { font-size: 22px; font-weight: 700; margin-top: 5px; color: var(--text-main); }
 
-        /* Table */
+        .country-filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; background: #f1f5f9; padding: 10px 15px; border-radius: 8px; }
+
         .table-container { overflow-x: auto; max-height: 600px; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
         table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
-        th { background-color: #f1f5f9; color: var(--text-main); font-weight: 600; padding: 12px; text-align: left; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; white-space: nowrap; }
-        td { padding: 10px 12px; border-bottom: 1px solid var(--border); border-right: 1px solid #f1f5f9; vertical-align: top; background: white; }
+        th { background-color: #f8fafc; color: var(--text-main); font-weight: 600; padding: 12px; text-align: left; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; white-space: nowrap; }
+        td { padding: 8px 10px; border-bottom: 1px solid var(--border); border-right: 1px solid #f1f5f9; vertical-align: top; background: white; }
         
         tr.has-error td { background-color: var(--danger-bg); }
         tr.is-duplicate td { background-color: var(--warning-bg); }
+        tr.is-omitted td { background-color: #ffffff !important; opacity: 0.85; }
 
         .error-msg { color: var(--danger); font-weight: 600; font-size: 11px; display: block; margin-top: 4px; }
         .dup-msg { color: var(--warning); font-weight: 600; font-size: 11px; display: block; margin-top: 2px; }
+        .landline-msg { color: #d97706; font-weight: 600; font-size: 11px; display: block; margin-top: 2px; }
         
         .input-table { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; width: 100%; }
-        .col-correo { min-width: 320px; }
-        .col-tel { min-width: 220px; }
-        .col-nombre, .col-apellido { min-width: 180px; }
+        .col-correo { min-width: 280px; }
+        .col-tel { min-width: 240px; }
+        .col-nombre, .col-apellido { min-width: 160px; }
+        .col-pais { min-width: 110px; }
         
         .cell-flex { display: flex; align-items: center; gap: 5px; width: 100%; }
         .cell-flex .input-table { flex: 1; }
 
-        /* Row Original Drawer (Detalle) */
         .row-original-detail { background-color: #f8fafc !important; border-bottom: 2px solid #cbd5e1; font-size: 12px; }
         .original-box { padding: 12px; background: #ffffff; border: 1px solid var(--border); border-radius: 8px; margin: 5px 0; }
         .original-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 8px; }
@@ -89,14 +93,15 @@
         .original-item strong { display: block; color: var(--text-muted); font-size: 10px; text-transform: uppercase; }
 
         .actions-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+        .footer-actions { display: flex; gap: 15px; align-items: center; margin-top: 20px; flex-wrap: wrap; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h1>Normalizador & Validador de Bases de Datos</h1>
-        <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">CX Core Tools</span>
+        <img src="botiaxlogonaranja.png" alt="Botiax" class="header-logo" onerror="this.outerHTML='<h1 style=\'margin:0;color:var(--primary);font-weight:800;\'>BOTIAX</h1>'">
+        <span class="header-tag">Normalizador de Base de Datos</span>
     </div>
 
     <!-- Indicador de pasos -->
@@ -119,7 +124,7 @@
     <!-- PASO 2 -->
     <div id="step2" class="step">
         <h2>Une tus columnas con los campos del sistema</h2>
-        <p style="color: var(--text-muted);">* Selecciona al menos un campo de Identidad y un campo de Contacto.</p>
+        <p style="color: var(--text-muted);">* Selecciona los campos a vincular. Si mapeas la columna País, el sistema asociará automáticamente cada registro con su regla correspondiente.</p>
         
         <div style="max-width: 600px; margin: 20px 0;">
             <table style="border: 1px solid var(--border); border-radius: 8px;">
@@ -134,6 +139,7 @@
                     <tr><td><strong>Apellido</strong></td><td><select id="mapApellido" class="col-select"></select></td></tr>
                     <tr><td><strong>Teléfono</strong></td><td><select id="mapTelefono" class="col-select"></select></td></tr>
                     <tr><td><strong>Correo</strong></td><td><select id="mapCorreo" class="col-select"></select></td></tr>
+                    <tr><td><strong>País (Opcional)</strong></td><td><select id="mapPais" class="col-select"></select></td></tr>
                 </tbody>
             </table>
         </div>
@@ -146,17 +152,25 @@
         </div>
 
         <div style="margin-bottom: 25px;">
-            <label for="paisSelect" style="font-weight: 600; display: block; margin-bottom: 5px;">País de los registros:</label>
+            <label for="paisSelect" style="font-weight: 600; display: block; margin-bottom: 5px;">País por defecto (Fallback si no hay columna o está vacía):</label>
             <select id="paisSelect" style="width: auto;" onchange="recalcularValidacionesSiPaso3()">
                 <option value="AR">Argentina (+549)</option>
-                <option value="CO">Colombia (+573)</option>
-                <option value="PE">Perú (+519)</option>
-                <option value="UY">Uruguay (+5989)</option>
-                <option value="PY">Paraguay (+5959)</option>
+                <option value="BR">Brasil (+55)</option>
                 <option value="CL">Chile (+569)</option>
-                <option value="EC">Ecuador (+5939)</option>
+                <option value="CO">Colombia (+573)</option>
+                <option value="CR">Costa Rica (+506)</option>
+                <option value="EC">Ecuador (+593)</option>
+                <option value="ES">España (+34)</option>
+                <option value="US">Estados Unidos / Canadá (+1)</option>
+                <option value="MX">México (+52)</option>
+                <option value="PA">Panamá (+507)</option>
+                <option value="PY">Paraguay (+5959)</option>
+                <option value="PE">Perú (+519)</option>
+                <option value="PT">Portugal (+351)</option>
+                <option value="DO">República Dominicana (+1)</option>
+                <option value="UY">Uruguay (+598)</option>
                 <option value="VE">Venezuela (+584)</option>
-                <option value="OTRO">Otro (Solo limpiar sintaxis)</option>
+                <option value="NA">N/A (Sin Validación de Teléfono)</option>
             </select>
         </div>
 
@@ -180,14 +194,45 @@
                 <div class="title" style="color: var(--warning);">Duplicados</div>
                 <div class="number" id="countDuplicados" style="color: var(--warning);">0</div>
             </div>
+            <div id="cardFijos" class="card-stat" onclick="seleccionarFiltro('fijos')">
+                <div class="title" style="color: #d97706;">Tel. Fijos / 0800</div>
+                <div class="number" id="countFijos" style="color: #d97706;">0</div>
+            </div>
+        </div>
+
+        <!-- Filtro Secundario por País -->
+        <div class="country-filter-bar">
+            <strong>🌐 Filtrar por País:</strong>
+            <select id="filtroPaisSelect" style="width: auto;" onchange="filtrarPorPais(this.value)">
+                <option value="TODOS">Todos los países</option>
+                <option value="AR">Argentina (AR)</option>
+                <option value="BR">Brasil (BR)</option>
+                <option value="CL">Chile (CL)</option>
+                <option value="CO">Colombia (CO)</option>
+                <option value="CR">Costa Rica (CR)</option>
+                <option value="EC">Ecuador (EC)</option>
+                <option value="ES">España (ES)</option>
+                <option value="US">Estados Unidos (US)</option>
+                <option value="MX">México (MX)</option>
+                <option value="PA">Panamá (PA)</option>
+                <option value="PY">Paraguay (PY)</option>
+                <option value="PE">Perú (PE)</option>
+                <option value="PT">Portugal (PT)</option>
+                <option value="DO">República Dominicana (DO)</option>
+                <option value="UY">Uruguay (UY)</option>
+                <option value="VE">Venezuela (VE)</option>
+                <option value="NA">N/A (Sin validar)</option>
+            </select>
         </div>
 
         <!-- Botones de Acción Masiva -->
         <div class="actions-bar">
-            <button class="btn" style="background-color: #8b5cf6;" onclick="aplicarSugerenciasMasivas()">✨ Aplicar Limpieza Masiva</button>
+            <button class="btn" style="background-color: var(--primary);" onclick="aplicarSugerenciasMasivas()">✨ Aplicar Limpieza Masiva</button>
+            <button class="btn" style="background-color: #ef4444;" onclick="eliminarErroresMasivo()">🗑️ Eliminar Contactos con Error</button>
+            <button class="btn" style="background-color: #64748b;" onclick="omitirErroresMasivo()">👁️‍🗨️ Omitir Todos los Errores</button>
             <button class="btn" style="background-color: #f97316;" onclick="eliminarDuplicadosMasivo()">🧹 Eliminar Duplicados</button>
-            <button class="btn" style="background-color: #ef4444;" onclick="eliminarSinContactoMasivo()">🗑️ Eliminar Sin Contacto</button>
-            <button class="btn" style="background-color: #64748b;" onclick="reiniciarAplicacion()">🔄 Cargar Otro Archivo</button>
+            <button class="btn" style="background-color: #b45309;" onclick="eliminarFijosMasivo()">☎️ Eliminar Fijos / 0800</button>
+            <button class="btn" style="background-color: #dc2626;" onclick="eliminarSinContactoMasivo()">🗑️ Eliminar Sin Contacto</button>
         </div>
 
         <!-- Tabla -->
@@ -198,8 +243,10 @@
             </table>
         </div>
         
-        <br>
-        <button class="btn btn-success" style="padding: 14px 24px; font-size: 16px;" onclick="exportarCSV()">📥 Descargar CSV Limpio</button>
+        <div class="footer-actions">
+            <button class="btn btn-success" style="padding: 14px 24px; font-size: 16px;" onclick="exportarCSV()">📥 Descargar CSV Limpio</button>
+            <button class="btn" style="background-color: #475569; padding: 14px 24px; font-size: 16px;" onclick="reiniciarAplicacion()">🔄 Cargar Otro Archivo</button>
+        </div>
     </div>
 </div>
 
@@ -210,6 +257,60 @@
     let mapeoColumnas = {};
     let nombreArchivoOriginal = "Base_Contactos";
     let filtroVistaActual = "todos";
+    let filtroPaisActual = "TODOS";
+
+    const LISTA_PAISES = [
+        { code: "AR", name: "Argentina" },
+        { code: "BR", name: "Brasil" },
+        { code: "CL", name: "Chile" },
+        { code: "CO", name: "Colombia" },
+        { code: "CR", name: "Costa Rica" },
+        { code: "EC", name: "Ecuador" },
+        { code: "ES", name: "España" },
+        { code: "US", name: "EE.UU." },
+        { code: "MX", name: "México" },
+        { code: "PA", name: "Panamá" },
+        { code: "PY", name: "Paraguay" },
+        { code: "PE", name: "Perú" },
+        { code: "PT", name: "Portugal" },
+        { code: "DO", name: "Rep. Dom." },
+        { code: "UY", name: "Uruguay" },
+        { code: "VE", name: "Venezuela" },
+        { code: "NA", name: "N/A" }
+    ];
+
+    const DICCIONARIO_PAISES = {
+        "AR": ["argentina", "arg", "ar", "argentino", "argentina/o"],
+        "BR": ["brasil", "brazil", "bra", "br", "brasilero", "brasileño", "brasileña"],
+        "CL": ["chile", "chl", "cl", "chileno", "chilena"],
+        "CO": ["colombia", "col", "co", "colombiano", "colombiana"],
+        "CR": ["costa rica", "costarrica", "cri", "cr", "costarricense", "costarricence"],
+        "EC": ["ecuador", "ecu", "ec", "ecuatoriano", "ecuatoriana"],
+        "ES": ["españa", "espana", "esp", "es", "español", "espanol", "española"],
+        "US": ["estados unidos", "eeuu", "usa", "us", "united states"],
+        "MX": ["mexico", "méxico", "mex", "mx", "mexicano", "mexicana"],
+        "PA": ["panama", "panamá", "pan", "pa", "panameño", "panameña"],
+        "PY": ["paraguay", "pry", "py", "paraguayo", "paraguaya"],
+        "PE": ["peru", "perú", "per", "pe", "peruano", "peruana"],
+        "PT": ["portugal", "prt", "pt", "portugues", "portugués", "portuguesa"],
+        "DO": ["republica dominicana", "rep dominicana", "dominicana", "dom", "do", "dominicano"],
+        "UY": ["uruguay", "ury", "uy", "uruguayo", "uruguaya"],
+        "VE": ["venezuela", "ven", "ve", "venezolano", "venezolana"],
+        "NA": ["n/a", "na", "no aplica", "ninguno", "otro", "other"]
+    };
+
+    function determinarCodigoPais(textoPais, paisFallback) {
+        if (!textoPais) return paisFallback;
+        let t = textoPais.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        if (!t) return paisFallback;
+
+        for (let code in DICCIONARIO_PAISES) {
+            if (DICCIONARIO_PAISES[code].some(alias => alias === t || t.split(/[\s,/-]+/).includes(alias))) {
+                return code;
+            }
+        }
+        return paisFallback;
+    }
 
     function cambiarPaso(paso) {
         document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
@@ -263,11 +364,12 @@
             nombre: ['nombre', 'first name', 'firstname', 'nombres', 'contacto', 'cliente'],
             apellido: ['apellido', 'last name', 'lastname', 'apellidos', 'surname'],
             tel: ['telefono', 'teléfono', 'tel', 'celular', 'cel', 'mobile', 'whatsapp', 'whapp', 'telef', 'phone', 'fono', 'movil', 'móvil'],
-            correo: ['correo', 'correo electronico', 'correo electrónico', 'email', 'e-mail', 'mail', 'e mail']
+            correo: ['correo', 'correo electronico', 'correo electrónico', 'email', 'e-mail', 'mail', 'e mail'],
+            pais: ['pais', 'país', 'country', 'nacionalidad', 'location', 'ubicacion', 'ubicación']
         };
 
         const normalizarHeader = (h) => h.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-        const mapeados = { nombre: -1, apellido: -1, tel: -1, correo: -1 };
+        const mapeados = { nombre: -1, apellido: -1, tel: -1, correo: -1, pais: -1 };
 
         columnasHeaders.forEach((header, index) => {
             const hNorm = normalizarHeader(header);
@@ -284,6 +386,7 @@
         if (mapeados.apellido !== -1) document.getElementById('mapApellido').value = mapeados.apellido;
         if (mapeados.tel !== -1) document.getElementById('mapTelefono').value = mapeados.tel;
         if (mapeados.correo !== -1) document.getElementById('mapCorreo').value = mapeados.correo;
+        if (mapeados.pais !== -1) document.getElementById('mapPais').value = mapeados.pais;
     }
 
     function limpiarTexto(txt) {
@@ -330,7 +433,8 @@
             nombre: parseInt(document.getElementById('mapNombre').value),
             apellido: parseInt(document.getElementById('mapApellido').value),
             tel: parseInt(document.getElementById('mapTelefono').value),
-            correo: parseInt(document.getElementById('mapCorreo').value)
+            correo: parseInt(document.getElementById('mapCorreo').value),
+            pais: parseInt(document.getElementById('mapPais').value)
         };
 
         const tieneIdentidad = (mapeoColumnas.nombre !== -1 || mapeoColumnas.apellido !== -1);
@@ -341,18 +445,26 @@
         }
 
         const separarNombreApellido = document.getElementById('chkSepararNombreApellido').checked;
+        const paisFallback = document.getElementById('paisSelect').value;
 
         datosProcesados = datosOriginales.map((fila, index) => {
             let rawFila = {};
             columnasHeaders.forEach((h, i) => { rawFila[h] = fila[i] !== undefined ? String(fila[i]) : ""; });
 
+            let paisDetectado = paisFallback;
+            if (mapeoColumnas.pais !== -1 && fila[mapeoColumnas.pais]) {
+                paisDetectado = determinarCodigoPais(fila[mapeoColumnas.pais], paisFallback);
+            }
+
             let item = {
                 id: index + 1,
                 nombre: mapeoColumnas.nombre !== -1 ? limpiarTexto(fila[mapeoColumnas.nombre]) : "",
                 apellido: mapeoColumnas.apellido !== -1 ? limpiarTexto(fila[mapeoColumnas.apellido]) : "",
-                tel: "", correo: "", 
+                tel: "", correo: "", paisCalculado: paisDetectado,
                 errorNombre: "", errorApellido: "", errorTel: "", errorCorreo: "",
+                esTelefonoFijo: false,
                 esDuplicado: false,
+                omitoError: false,
                 motivoDuplicado: "",
                 extras: {},
                 rawOriginal: rawFila,
@@ -387,7 +499,7 @@
             validarItemUnificado(item);
 
             columnasHeaders.forEach((header, colIdx) => {
-                if (colIdx !== mapeoColumnas.nombre && colIdx !== mapeoColumnas.apellido && colIdx !== mapeoColumnas.tel && colIdx !== mapeoColumnas.correo) {
+                if (colIdx !== mapeoColumnas.nombre && colIdx !== mapeoColumnas.apellido && colIdx !== mapeoColumnas.tel && colIdx !== mapeoColumnas.correo && colIdx !== mapeoColumnas.pais) {
                     let valorExtra = fila[colIdx];
                     if(valorExtra && isNaN(valorExtra)) {
                         item.extras[colIdx] = limpiarTexto(valorExtra);
@@ -426,7 +538,15 @@
 
     function recalcularValidacionesSiPaso3() {
         if(datosProcesados.length > 0) {
-            datosProcesados.forEach(item => validarItemUnificado(item));
+            const paisFallback = document.getElementById('paisSelect').value;
+            datosProcesados.forEach(item => {
+                if (mapeoColumnas.pais !== -1 && item.rawOriginal[columnasHeaders[mapeoColumnas.pais]]) {
+                    item.paisCalculado = determinarCodigoPais(item.rawOriginal[columnasHeaders[mapeoColumnas.pais]], paisFallback);
+                } else {
+                    item.paisCalculado = paisFallback;
+                }
+                validarItemUnificado(item);
+            });
             evaluarDuplicados();
             renderizarTablaErrores();
         }
@@ -466,7 +586,38 @@
         if(tipo === 'todos') document.getElementById('cardTodos').classList.add('active');
         if(tipo === 'errores') document.getElementById('cardErrores').classList.add('active');
         if(tipo === 'duplicados') document.getElementById('cardDuplicados').classList.add('active');
+        if(tipo === 'fijos') document.getElementById('cardFijos').classList.add('active');
         renderizarTablaErrores();
+    }
+
+    function filtrarPorPais(codigo) {
+        filtroPaisActual = codigo;
+        renderizarTablaErrores();
+    }
+
+    function eliminarErroresMasivo() {
+        const erroresCount = datosProcesados.filter(item => !item.omitoError && (item.errorNombre || item.errorApellido || item.errorTel || item.errorCorreo)).length;
+        if (erroresCount === 0) return alert("No hay contactos con errores activos para eliminar.");
+
+        if (confirm(`¿Deseas eliminar automáticamente los ${erroresCount} contactos que presentan errores?`)) {
+            datosProcesados = datosProcesados.filter(item => item.omitoError || (!item.errorNombre && !item.errorApellido && !item.errorTel && !item.errorCorreo));
+            evaluarDuplicados();
+            renderizarTablaErrores();
+        }
+    }
+
+    function omitirErroresMasivo() {
+        let contador = 0;
+        datosProcesados.forEach(item => {
+            if (!item.omitoError && (item.errorNombre || item.errorApellido || item.errorTel || item.errorCorreo)) {
+                item.omitoError = true;
+                contador++;
+            }
+        });
+
+        if (contador === 0) return alert("No hay errores activos pendientes para omitir.");
+        renderizarTablaErrores();
+        alert(`Se han omitido los errores de ${contador} contactos.`);
     }
 
     function eliminarDuplicadosMasivo() {
@@ -475,6 +626,17 @@
 
         if (confirm(`¿Deseas eliminar automáticamente los ${duplicadosCount} registros duplicados?`)) {
             datosProcesados = datosProcesados.filter(i => !i.esDuplicado);
+            evaluarDuplicados();
+            renderizarTablaErrores();
+        }
+    }
+
+    function eliminarFijosMasivo() {
+        const fijosCount = datosProcesados.filter(i => i.esTelefonoFijo).length;
+        if (fijosCount === 0) return alert("No hay contactos con teléfono fijo o 0800 para eliminar.");
+
+        if (confirm(`¿Deseas eliminar automáticamente los ${fijosCount} contactos detectados con teléfono fijo o 0800?`)) {
+            datosProcesados = datosProcesados.filter(i => !i.esTelefonoFijo);
             evaluarDuplicados();
             renderizarTablaErrores();
         }
@@ -492,7 +654,7 @@
     }
 
     function validarItemUnificado(item) {
-        const pais = document.getElementById('paisSelect').value;
+        const pais = item.paisCalculado || document.getElementById('paisSelect').value;
 
         item.errorNombre = "";
         item.errorApellido = "";
@@ -502,18 +664,190 @@
         }
 
         item.errorTel = "";
+        item.esTelefonoFijo = false;
+
         if (item.tel) {
+            // Detección de Fijos/0800
+            if (pais === "AR") {
+                if (item.tel.startsWith("0800") || item.tel.startsWith("0810") || item.tel.startsWith("54800") || item.tel.startsWith("54810")) {
+                    item.esTelefonoFijo = true;
+                }
+            } else if (pais === "CL") {
+                if ((item.tel.length === 9 && !item.tel.startsWith("9")) || (item.tel.startsWith("56") && item.tel.length === 11 && !item.tel.startsWith("569"))) {
+                    item.esTelefonoFijo = true;
+                }
+            } else if (pais === "UY") {
+                if ((item.tel.length === 8 && !item.tel.startsWith("9")) || (item.tel.startsWith("598") && item.tel.length === 11 && !item.tel.startsWith("5989"))) {
+                    item.esTelefonoFijo = true;
+                }
+            } else if (pais === "PE") {
+                if ((item.tel.length === 9 && !item.tel.startsWith("9")) || (item.tel.startsWith("51") && item.tel.length === 11 && !item.tel.startsWith("519"))) {
+                    item.esTelefonoFijo = true;
+                }
+            } else if (pais === "PY") {
+                if ((item.tel.length === 9 && !item.tel.startsWith("9")) || (item.tel.startsWith("595") && item.tel.length === 12 && !item.tel.startsWith("5959"))) {
+                    item.esTelefonoFijo = true;
+                }
+            } else if (pais === "EC") {
+                if ((item.tel.length === 9 && !item.tel.startsWith("9")) || (item.tel.startsWith("593") && item.tel.length === 12 && !item.tel.startsWith("5939"))) {
+                    item.esTelefonoFijo = true;
+                }
+            } else if (pais === "VE") {
+                if ((item.tel.length === 10 && !item.tel.startsWith("4")) || (item.tel.startsWith("58") && item.tel.length === 12 && !item.tel.startsWith("584"))) {
+                    item.esTelefonoFijo = true;
+                }
+            } else if (pais === "CO") {
+                if ((item.tel.length === 10 && !item.tel.startsWith("3")) || (item.tel.startsWith("57") && item.tel.length === 12 && !item.tel.startsWith("573"))) {
+                    item.esTelefonoFijo = true;
+                }
+            } else if (pais === "ES") {
+                if (item.tel.length === 9 && !item.tel.startsWith("6") && !item.tel.startsWith("7")) {
+                    item.esTelefonoFijo = true;
+                } else if (item.tel.startsWith("34") && item.tel.length === 11 && !item.tel.startsWith("346") && !item.tel.startsWith("347")) {
+                    item.esTelefonoFijo = true;
+                }
+            }
+
             if (esTelefonoInvalidoBasura(item.tel)) {
                 item.errorTel = "Teléfono inválido";
-            } else {
+            } else if (pais !== "NA") {
                 if (pais === "AR") {
-                    if (item.tel.startsWith("54915")) item.errorTel = "Reemplazar 54915 por 54911";
-                    else if (item.tel.length > 13 && item.tel.includes("15")) item.errorTel = "Remover 15 interno sobrante";
-                    else if (!item.tel.startsWith("549")) item.errorTel = "Falta prefijo (549)";
-                    else if (item.tel.length === 11 && item.tel.startsWith("549")) item.errorTel = "Agregar 11 despues de 549";
-                    else if (item.tel.length < 13) item.errorTel = `Faltan ${13 - item.tel.length} números (Deben ser 13)`;
-                    else if (item.tel.length > 13) item.errorTel = `Sobran ${item.tel.length - 13} números (Deben ser 13)`;
+                    if (item.tel.startsWith("5490")) {
+                        item.errorTel = "Remover 0 sobrante después de 549 (5490...)";
+                    }
+                    else if (item.tel.startsWith("0")) {
+                        item.errorTel = "Remover 0 inicial y agregar prefijo (549)";
+                    }
+                    else if (item.tel.startsWith("5411")) {
+                        item.errorTel = "Agregar 9 despues de 54 (54911)";
+                    }
+                    else if (item.tel.startsWith("54915")) {
+                        item.errorTel = "Reemplazar 54915 por 54911";
+                    }
+                    else if (item.tel.length > 13 && item.tel.includes("15")) {
+                        item.errorTel = "Remover 15 interno sobrante";
+                    }
+                    else if (!item.tel.startsWith("549")) {
+                        item.errorTel = "Falta prefijo (549)";
+                    }
+                    else if (item.tel.length === 11 && item.tel.startsWith("549")) {
+                        item.errorTel = "Agregar 11 despues de 549";
+                    }
+                    else if (item.tel.length < 13) {
+                        item.errorTel = `Faltan ${13 - item.tel.length} números (Deben ser 13)`;
+                    }
+                    else if (item.tel.length > 13) {
+                        item.errorTel = `Sobran ${item.tel.length - 13} números (Deben ser 13)`;
+                    }
                 } 
+                else if (pais === "CL") {
+                    if (item.tel.length === 10 && item.tel.startsWith("56") && !item.tel.startsWith("569")) {
+                        item.errorTel = "Agregar 9 despues de 56 (569)";
+                    }
+                    else if (item.tel.length === 9 && item.tel.startsWith("9")) {
+                        item.errorTel = "Falta prefijo país (56)";
+                    }
+                    else if (!item.tel.startsWith("56")) {
+                        item.errorTel = "No inicia con 56";
+                    }
+                    else if (item.tel.startsWith("56") && !item.tel.startsWith("569")) {
+                        item.errorTel = "Prefijo válido pero falta inicio (9)";
+                    }
+                    else if (item.tel.length < 11) {
+                        item.errorTel = `Faltan ${11 - item.tel.length} números (Deben ser 11)`;
+                    }
+                    else if (item.tel.length > 11) {
+                        item.errorTel = `Sobran ${item.tel.length - 11} números (Deben ser 11)`;
+                    }
+                }
+                else if (pais === "UY") {
+                    if (item.tel.length === 11 && item.tel.startsWith("598") && !item.tel.startsWith("5989")) {
+                        item.errorTel = "Agregar 9 despues de 598 (5989)";
+                    }
+                    else if (item.tel.length === 8 && item.tel.startsWith("9")) {
+                        item.errorTel = "Falta prefijo país (598)";
+                    }
+                    else if (!item.tel.startsWith("598")) {
+                        item.errorTel = "No inicia con 598";
+                    }
+                    else if (item.tel.startsWith("598") && !item.tel.startsWith("5989")) {
+                        item.errorTel = "Prefijo válido pero falta inicio (9)";
+                    }
+                    else if (item.tel.length < 11) {
+                        item.errorTel = `Faltan ${11 - item.tel.length} números (Deben ser 11)`;
+                    }
+                    else if (item.tel.length > 11) {
+                        item.errorTel = `Sobran ${item.tel.length - 11} números (Deben ser 11)`;
+                    }
+                }
+                else if (pais === "PE") {
+                    if (item.tel.length === 9 && item.tel.startsWith("9")) {
+                        item.errorTel = "Falta prefijo país (51)";
+                    }
+                    else if (!item.tel.startsWith("51")) {
+                        item.errorTel = "No inicia con 51";
+                    }
+                    else if (item.tel.startsWith("51") && !item.tel.startsWith("519")) {
+                        item.errorTel = "Prefijo válido pero falta inicio (9)";
+                    }
+                    else if (item.tel.length < 11) {
+                        item.errorTel = `Faltan ${11 - item.tel.length} números (Deben ser 11)`;
+                    }
+                    else if (item.tel.length > 11) {
+                        item.errorTel = `Sobran ${item.tel.length - 11} números (Deben ser 11)`;
+                    }
+                }
+                else if (pais === "PY") {
+                    if (item.tel.length === 9 && item.tel.startsWith("9")) {
+                        item.errorTel = "Falta prefijo país (595)";
+                    }
+                    else if (!item.tel.startsWith("595")) {
+                        item.errorTel = "No inicia con 595";
+                    }
+                    else if (item.tel.startsWith("595") && !item.tel.startsWith("5959")) {
+                        item.errorTel = "Prefijo válido pero falta inicio (9)";
+                    }
+                    else if (item.tel.length < 12) {
+                        item.errorTel = `Faltan ${12 - item.tel.length} números (Deben ser 12)`;
+                    }
+                    else if (item.tel.length > 12) {
+                        item.errorTel = `Sobran ${item.tel.length - 12} números (Deben ser 12)`;
+                    }
+                }
+                else if (pais === "EC") {
+                    if (item.tel.length === 9 && item.tel.startsWith("9")) {
+                        item.errorTel = "Falta prefijo país (593)";
+                    }
+                    else if (!item.tel.startsWith("593")) {
+                        item.errorTel = "No inicia con 593";
+                    }
+                    else if (item.tel.startsWith("593") && !item.tel.startsWith("5939")) {
+                        item.errorTel = "Prefijo válido pero falta inicio (9)";
+                    }
+                    else if (item.tel.length < 12) {
+                        item.errorTel = `Faltan ${12 - item.tel.length} números (Deben ser 12)`;
+                    }
+                    else if (item.tel.length > 12) {
+                        item.errorTel = `Sobran ${item.tel.length - 12} números (Deben ser 12)`;
+                    }
+                }
+                else if (pais === "VE") {
+                    if (item.tel.length === 10 && item.tel.startsWith("4")) {
+                        item.errorTel = "Falta prefijo país (58)";
+                    }
+                    else if (!item.tel.startsWith("58")) {
+                        item.errorTel = "No inicia con 58";
+                    }
+                    else if (item.tel.startsWith("58") && !item.tel.startsWith("584")) {
+                        item.errorTel = "Prefijo válido pero falta inicio (4)";
+                    }
+                    else if (item.tel.length < 12) {
+                        item.errorTel = `Faltan ${12 - item.tel.length} números (Deben ser 12)`;
+                    }
+                    else if (item.tel.length > 12) {
+                        item.errorTel = `Sobran ${item.tel.length - 12} números (Deben ser 12)`;
+                    }
+                }
                 else if (pais === "CO") {
                     if (item.tel.length === 10 && item.tel.startsWith("3")) item.errorTel = "Falta prefijo país (57)";
                     else if (!item.tel.startsWith("57")) item.errorTel = "No inicia con 57";
@@ -521,24 +855,53 @@
                     else if (item.tel.length < 12) item.errorTel = `Faltan ${12 - item.tel.length} números (Deben ser 12)`;
                     else if (item.tel.length > 12) item.errorTel = `Sobran ${item.tel.length - 12} números (Deben ser 12)`;
                 }
-                else {
-                    const configuracionPaises = {
-                        "PE": { prefijo: "51", inicio: "9", largo: 11 },
-                        "CL": { prefijo: "56", inicio: "9", largo: 11 },
-                        "UY": { prefijo: "598", inicio: "9", largo: 12 },
-                        "PY": { prefijo: "595", inicio: "9", largo: 12 },
-                        "EC": { prefijo: "593", inicio: "9", largo: 12 },
-                        "VE": { prefijo: "58", inicio: "4", largo: 12 }
-                    };
-                    if (configuracionPaises[pais]) {
-                        const conf = configuracionPaises[pais];
-                        const largoCelularLocal = conf.largo - conf.prefijo.length;
-                        if (item.tel.length === largoCelularLocal && item.tel.startsWith(conf.inicio)) item.errorTel = `Falta prefijo país (${conf.prefijo})`;
-                        else if (!item.tel.startsWith(conf.prefijo)) item.errorTel = `No inicia con ${conf.prefijo}`;
-                        else if (item.tel.startsWith(conf.prefijo) && !item.tel.startsWith(conf.prefijo + conf.inicio)) item.errorTel = `Prefijo válido pero falta inicio (${conf.inicio})`;
-                        else if (item.tel.length < conf.largo) item.errorTel = `Faltan ${conf.largo - item.tel.length} números (Deben ser ${conf.largo})`;
-                        else if (item.tel.length > conf.largo) item.errorTel = `Sobran ${conf.largo - item.tel.length} números (Deben ser ${conf.largo})`;
-                    }
+                else if (pais === "BR") {
+                    if (item.tel.length === 11 && item.tel.endsWith("9")) item.errorTel = "Falta prefijo país (55)";
+                    else if (!item.tel.startsWith("55")) item.errorTel = "No inicia con prefijo Brasil (55)";
+                    else if (item.tel.length < 13) item.errorTel = `Faltan ${13 - item.tel.length} números (BR debe ser 13)`;
+                    else if (item.tel.length > 13) item.errorTel = `Sobran ${item.tel.length - 13} números (BR debe ser 13)`;
+                }
+                else if (pais === "ES") {
+                    if (item.tel.length === 9 && (item.tel.startsWith("6") || item.tel.startsWith("7"))) item.errorTel = "Falta prefijo país (34)";
+                    else if (!item.tel.startsWith("34")) item.errorTel = "No inicia con prefijo España (34)";
+                    else if (item.tel.length < 11) item.errorTel = `Faltan ${11 - item.tel.length} números (ES debe ser 11)`;
+                    else if (item.tel.length > 11) item.errorTel = `Sobran ${item.tel.length - 11} números (ES debe ser 11)`;
+                }
+                else if (pais === "US") {
+                    if (item.tel.length === 10) item.errorTel = "Falta prefijo país (1)";
+                    else if (!item.tel.startsWith("1")) item.errorTel = "No inicia con prefijo EE.UU. (1)";
+                    else if (item.tel.length < 11) item.errorTel = `Faltan ${11 - item.tel.length} números (EE.UU. debe ser 11)`;
+                    else if (item.tel.length > 11) item.errorTel = `Sobran ${item.tel.length - 11} números (EE.UU. debe ser 11)`;
+                }
+                else if (pais === "MX") {
+                    if (item.tel.length === 10) item.errorTel = "Falta prefijo país (52)";
+                    else if (!item.tel.startsWith("52")) item.errorTel = "No inicia con prefijo México (52)";
+                    else if (item.tel.length < 12) item.errorTel = `Faltan ${12 - item.tel.length} números (MX debe ser 12)`;
+                    else if (item.tel.length > 12) item.errorTel = `Sobran ${item.tel.length - 12} números (MX debe ser 12)`;
+                }
+                else if (pais === "PT") {
+                    if (item.tel.length === 9 && item.tel.startsWith("9")) item.errorTel = "Falta prefijo país (351)";
+                    else if (!item.tel.startsWith("351")) item.errorTel = "No inicia con prefijo Portugal (351)";
+                    else if (item.tel.length < 12) item.errorTel = `Faltan ${12 - item.tel.length} números (PT debe ser 12)`;
+                    else if (item.tel.length > 12) item.errorTel = `Sobran ${item.tel.length - 12} números (PT debe ser 12)`;
+                }
+                else if (pais === "CR") {
+                    if (item.tel.length === 8) item.errorTel = "Falta prefijo país (506)";
+                    else if (!item.tel.startsWith("506")) item.errorTel = "No inicia con prefijo Costa Rica (506)";
+                    else if (item.tel.length < 11) item.errorTel = `Faltan ${11 - item.tel.length} números (CR debe ser 11)`;
+                    else if (item.tel.length > 11) item.errorTel = `Sobran ${item.tel.length - 11} números (CR debe ser 11)`;
+                }
+                else if (pais === "PA") {
+                    if (item.tel.length === 8 && item.tel.startsWith("6")) item.errorTel = "Falta prefijo país (507)";
+                    else if (!item.tel.startsWith("507")) item.errorTel = "No inicia con prefijo Panamá (507)";
+                    else if (item.tel.length < 11) item.errorTel = `Faltan ${11 - item.tel.length} números (PA debe ser 11)`;
+                    else if (item.tel.length > 11) item.errorTel = `Sobran ${item.tel.length - 11} números (PA debe ser 11)`;
+                }
+                else if (pais === "DO") {
+                    if (item.tel.length === 10 && (item.tel.startsWith("809") || item.tel.startsWith("829") || item.tel.startsWith("849"))) item.errorTel = "Falta prefijo país (1)";
+                    else if (!item.tel.startsWith("1")) item.errorTel = "No inicia con prefijo Rep. Dom. (1)";
+                    else if (item.tel.length < 11) item.errorTel = `Faltan ${11 - item.tel.length} números (DO debe ser 11)`;
+                    else if (item.tel.length > 11) item.errorTel = `Sobran ${item.tel.length - 11} números (DO debe ser 11)`;
                 }
             }
         }
@@ -575,17 +938,34 @@
         renderizarTablaErrores();
     }
 
+    function toggleOmitirError(index) {
+        datosProcesados[index].omitoError = !datosProcesados[index].omitoError;
+        renderizarTablaErrores();
+    }
+
+    function cambiarPaisContacto(index, nuevoPais) {
+        datosProcesados[index].paisCalculado = nuevoPais;
+        validarItemUnificado(datosProcesados[index]);
+        evaluarDuplicados();
+        renderizarTablaErrores();
+    }
+
     function renderizarTablaErrores() {
         const thead = document.getElementById('resultHeader');
         const tbody = document.getElementById('resultBody');
 
-        document.getElementById('countTodos').innerText = datosProcesados.length;
-        document.getElementById('countErrores').innerText = datosProcesados.filter(item => item.errorNombre || item.errorApellido || item.errorTel || item.errorCorreo).length;
-        document.getElementById('countDuplicados').innerText = datosProcesados.filter(item => item.esDuplicado).length;
+        const conError = datosProcesados.filter(item => !item.omitoError && (item.errorNombre || item.errorApellido || item.errorTel || item.errorCorreo));
+        const conDuplicado = datosProcesados.filter(item => item.esDuplicado);
+        const conFijo = datosProcesados.filter(item => item.esTelefonoFijo);
 
-        let headerHTML = `<tr><th>Ori.</th><th>Fila</th><th class="col-nombre">Nombre</th><th class="col-apellido">Apellido</th><th class="col-tel">Teléfono</th><th class="col-correo">Correo</th>`;
+        document.getElementById('countTodos').innerText = datosProcesados.length;
+        document.getElementById('countErrores').innerText = conError.length;
+        document.getElementById('countDuplicados').innerText = conDuplicado.length;
+        document.getElementById('countFijos').innerText = conFijo.length;
+
+        let headerHTML = `<tr><th>Ori.</th><th>Fila</th><th class="col-pais">País</th><th class="col-nombre">Nombre</th><th class="col-apellido">Apellido</th><th class="col-tel">Teléfono</th><th class="col-correo">Correo</th>`;
         columnasHeaders.forEach((header, colIdx) => {
-            if (colIdx !== mapeoColumnas.nombre && colIdx !== mapeoColumnas.apellido && colIdx !== mapeoColumnas.tel && colIdx !== mapeoColumnas.correo) {
+            if (colIdx !== mapeoColumnas.nombre && colIdx !== mapeoColumnas.apellido && colIdx !== mapeoColumnas.tel && colIdx !== mapeoColumnas.correo && colIdx !== mapeoColumnas.pais) {
                 headerHTML += `<th>${header} (Extra)</th>`;
             }
         });
@@ -594,51 +974,91 @@
 
         tbody.innerHTML = "";
         datosProcesados.forEach((item, index) => {
-            const tieneError = !!(item.errorNombre || item.errorApellido || item.errorTel || item.errorCorreo);
+            const tieneErrorActivo = !item.omitoError && !!(item.errorNombre || item.errorApellido || item.errorTel || item.errorCorreo);
 
-            if (filtroVistaActual === "errores" && !tieneError) return;
+            if (filtroVistaActual === "errores" && !tieneErrorActivo) return;
             if (filtroVistaActual === "duplicados" && !item.esDuplicado) return;
+            if (filtroVistaActual === "fijos" && !item.esTelefonoFijo) return;
+            if (filtroPaisActual !== "TODOS" && item.paisCalculado !== filtroPaisActual) return;
 
             const tr = document.createElement('tr');
-            if (tieneError) tr.classList.add('has-error');
+            if (tieneErrorActivo) tr.classList.add('has-error');
             if (item.esDuplicado) tr.classList.add('is-duplicate');
+            if (item.omitoError) tr.classList.add('is-omitted');
 
             let btnRapidoTel = "";
-            if (item.errorTel === "Teléfono inválido") btnRapidoTel = `<button class="btn-quick" style="background-color: #ef4444;" onclick="arreglarTel(${index}, 'borrarTel')">Borrar</button>`;
-            else if (item.errorTel === "Falta prefijo (549)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar549')">+549</button>`;
-            else if (item.errorTel === "Agregar 11 despues de 549") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'insertar11Argentina')">+11</button>`;
-            else if (item.errorTel === "Reemplazar 54915 por 54911") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'cambiarA11')">Usar 11</button>`;
-            else if (item.errorTel === "Remover 15 interno sobrante") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'sacar15Interno')">Borrar 15</button>`;
-            else if (item.errorTel === "Falta prefijo país (57)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar57')">+57</button>`;
+            if (!item.omitoError && item.errorTel) {
+                if (item.errorTel === "Teléfono inválido") btnRapidoTel = `<button class="btn-quick" style="background-color: #ef4444;" onclick="arreglarTel(${index}, 'borrarTel')">Borrar</button>`;
+                else if (item.errorTel === "Remover 0 sobrante después de 549 (5490...)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'quitarCeroInternoArgentina')">+549 (Sin 0)</button>`;
+                else if (item.errorTel === "Remover 0 inicial y agregar prefijo (549)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'quitarCeroYAgregar549')">+549 (Sintax)</button>`;
+                else if (item.errorTel === "Agregar 9 despues de 54 (54911)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'insertar9En5411')">+9 (54911)</button>`;
+                else if (item.errorTel === "Agregar 9 despues de 56 (569)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'insertar9EnChile')">+9 (569)</button>`;
+                else if (item.errorTel === "Agregar 9 despues de 598 (5989)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'insertar9EnUruguay')">+9 (5989)</button>`;
+                else if (item.errorTel === "Falta prefijo (549)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar549')">+549</button>`;
+                else if (item.errorTel === "Agregar 11 despues de 549") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'insertar11Argentina')">+11</button>`;
+                else if (item.errorTel === "Reemplazar 54915 por 54911") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'cambiarA11')">Usar 11</button>`;
+                else if (item.errorTel === "Remover 15 interno sobrante") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'sacar15Interno')">Borrar 15</button>`;
+                else if (item.errorTel === "Falta prefijo país (57)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar57')">+57</button>`;
+                else if (item.errorTel === "Falta prefijo país (55)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar55')">+55</button>`;
+                else if (item.errorTel === "Falta prefijo país (34)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar34')">+34</button>`;
+                else if (item.errorTel === "Falta prefijo país (1)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar1')">+1</button>`;
+                else if (item.errorTel === "Falta prefijo país (52)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar52')">+52</button>`;
+                else if (item.errorTel === "Falta prefijo país (351)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar351')">+351</button>`;
+                else if (item.errorTel === "Falta prefijo país (506)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar506')">+506</button>`;
+                else if (item.errorTel === "Falta prefijo país (507)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar507')">+507</button>`;
+                else if (item.errorTel === "Falta prefijo país (56)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar56')">+56</button>`;
+                else if (item.errorTel === "Falta prefijo país (598)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar598')">+598</button>`;
+                else if (item.errorTel === "Falta prefijo país (51)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar51')">+51</button>`;
+                else if (item.errorTel === "Falta prefijo país (595)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar595')">+595</button>`;
+                else if (item.errorTel === "Falta prefijo país (593)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar593')">+593</button>`;
+                else if (item.errorTel === "Falta prefijo país (58)") btnRapidoTel = `<button class="btn-quick" onclick="arreglarTel(${index}, 'agregar58')">+58</button>`;
+            }
 
             let btnRapidoCorreo = "";
-            if (item.errorCorreo === "Falta el @ antes del proveedor") btnRapidoCorreo = `<button class="btn-quick" onclick="arreglarCorreo(${index}, 'agregarArroba')">+ @</button>`;
-            else if (item.errorCorreo === "Falta punto antes de com (.com)") btnRapidoCorreo = `<button class="btn-quick" onclick="arreglarCorreo(${index}, 'insertarPuntoCom')">.com</button>`;
-            else if (item.errorCorreo === "Falta agregar extensión (.com)") btnRapidoCorreo = `<button class="btn-quick" onclick="arreglarCorreo(${index}, 'ponerCom')">.com</button>`;
-            else if (item.errorCorreo === "Corregir signos duplicados") btnRapidoCorreo = `<button class="btn-quick" onclick="arreglarCorreo(${index}, 'reducirSignos')">Limpiar</button>`;
-            else if (item.errorCorreo === "Corregir a @gmail.com") btnRapidoCorreo = `<button class="btn-quick" onclick="arreglarCorreo(${index}, 'proveedorGmail')">Gmail</button>`;
-            else if (item.errorCorreo === "Corregir a @hotmail.com") btnRapidoCorreo = `<button class="btn-quick" onclick="arreglarCorreo(${index}, 'proveedorHotmail')">Hotmail</button>`;
-            else if (item.errorCorreo === "Cambiar .co por .com (Exclusivo Argentina)") btnRapidoCorreo = `<button class="btn-quick" style="background-color: #0284c7;" onclick="arreglarCorreo(${index}, 'cambiarCoACom')">→ .com</button>`;
+            if (!item.omitoError && item.errorCorreo) {
+                if (item.errorCorreo === "Falta el @ antes del proveedor") btnRapidoCorreo = `<button class="btn-quick" onclick="arreglarCorreo(${index}, 'agregarArroba')">+ @</button>`;
+                else if (item.errorCorreo === "Falta punto antes de com (.com)") btnRapidoCorreo = `<button class="btn-quick" onclick="arreglarCorreo(${index}, 'insertarPuntoCom')">.com</button>`;
+                else if (item.errorCorreo === "Falta agregar extensión (.com)") btnRapidoCorreo = `<button class="btn-quick" onclick="arreglarCorreo(${index}, 'ponerCom')">.com</button>`;
+                else if (item.errorCorreo === "Corregir signos duplicados") btnRapidoCorreo = `<button class="btn-quick" onclick="arreglarCorreo(${index}, 'reducirSignos')">Limpiar</button>`;
+                else if (item.errorCorreo === "Corregir a @gmail.com") btnRapidoCorreo = `<button class="btn-quick" onclick="arreglarCorreo(${index}, 'proveedorGmail')">Gmail</button>`;
+                else if (item.errorCorreo === "Corregir a @hotmail.com") btnRapidoCorreo = `<button class="btn-quick" onclick="arreglarCorreo(${index}, 'proveedorHotmail')">Hotmail</button>`;
+                else if (item.errorCorreo === "Cambiar .co por .com (Exclusivo Argentina)") btnRapidoCorreo = `<button class="btn-quick" style="background-color: #0284c7;" onclick="arreglarCorreo(${index}, 'cambiarCoACom')">→ .com</button>`;
+            }
 
             let avisoDuplicado = item.esDuplicado ? `<span class="dup-msg">⚠️ ${item.motivoDuplicado}</span>` : "";
+            let avisoFijo = item.esTelefonoFijo ? `<span class="landline-msg">⚠️ Es teléfono fijo${item.paisCalculado === 'AR' ? ' / 0800' : ''}</span>` : "";
+
+            let optionsPaises = LISTA_PAISES.map(p => 
+                `<option value="${p.code}" ${item.paisCalculado === p.code ? 'selected' : ''}>${p.name}</option>`
+            ).join('');
+
+            let btnOmitir = item.omitoError 
+                ? `<button class="btn-omit" style="background-color:#10b981;" title="Volver a validar" onclick="toggleOmitirError(${index})">🛡️ Re-validar</button>`
+                : `<button class="btn-omit" title="Omitir alerta de error" onclick="toggleOmitirError(${index})">👁️‍🗨️ Omitir</button>`;
 
             let filaHTML = `
                 <td><button class="btn-icon" title="Ver dato original" onclick="toggleVerOriginal(${index})">👁️</button></td>
                 <td><strong>${item.id}</strong></td>
+                <td class="col-pais">
+                    <select class="input-table" style="font-weight:700; color:var(--primary);" onchange="cambiarPaisContacto(${index}, this.value)">
+                        ${optionsPaises}
+                    </select>
+                </td>
                 <td class="col-nombre">
                     <input type="text" class="input-table" value="${item.nombre}" onchange="actualizarCelda(${index}, 'nombre', this.value)"/>
-                    <span class="error-msg">${item.errorNombre}</span>
+                    ${!item.omitoError ? `<span class="error-msg">${item.errorNombre}</span>` : ''}
                 </td>
                 <td class="col-apellido">
                     <input type="text" class="input-table" value="${item.apellido}" onchange="actualizarCelda(${index}, 'apellido', this.value)"/>
-                    <span class="error-msg">${item.errorApellido}</span>
+                    ${!item.omitoError ? `<span class="error-msg">${item.errorApellido}</span>` : ''}
                 </td>
                 <td class="col-tel">
                     <div class="cell-flex">
                         <input type="text" class="input-table" value="${item.tel}" onchange="actualizarCelda(${index}, 'tel', this.value)"/>
                         ${btnRapidoTel}
                     </div>
-                    <span class="error-msg">${item.errorTel}</span>
+                    ${!item.omitoError ? `<span class="error-msg">${item.errorTel}</span>` : ''}
+                    ${avisoFijo}
                     ${item.motivoDuplicado.includes("Teléfono") ? avisoDuplicado : ""}
                 </td>
                 <td class="col-correo">
@@ -646,26 +1066,31 @@
                         <input type="text" class="input-table" value="${item.correo}" onchange="actualizarCelda(${index}, 'correo', this.value)"/>
                         ${btnRapidoCorreo}
                     </div>
-                    <span class="error-msg">${item.errorCorreo}</span>
+                    ${!item.omitoError ? `<span class="error-msg">${item.errorCorreo}</span>` : ''}
                     ${item.motivoDuplicado.includes("Correo") ? avisoDuplicado : ""}
                 </td>
             `;
 
             columnasHeaders.forEach((header, colIdx) => {
-                if (colIdx !== mapeoColumnas.nombre && colIdx !== mapeoColumnas.apellido && colIdx !== mapeoColumnas.tel && colIdx !== mapeoColumnas.correo) {
+                if (colIdx !== mapeoColumnas.nombre && colIdx !== mapeoColumnas.apellido && colIdx !== mapeoColumnas.tel && colIdx !== mapeoColumnas.correo && colIdx !== mapeoColumnas.pais) {
                     let valExtra = item.extras[colIdx] || "";
                     filaHTML += `<td><input type="text" class="input-table" value="${valExtra}" onchange="actualizarCeldaExtra(${index}, ${colIdx}, this.value)"/></td>`;
                 }
             });
 
-            filaHTML += `<td style="text-align:center;"><button class="btn-danger" onclick="eliminarFila(${index})">🗑️</button></td>`;
+            filaHTML += `
+                <td style="text-align:center; white-space:nowrap;">
+                    ${btnOmitir}
+                    <button class="btn-danger" style="margin-left:4px;" onclick="eliminarFila(${index})">🗑️</button>
+                </td>
+            `;
             tr.innerHTML = filaHTML;
             tbody.appendChild(tr);
 
             if (item.verOriginal) {
                 const trOriginal = document.createElement('tr');
                 trOriginal.className = "row-original-detail";
-                let totalCols = 7 + Object.keys(item.extras).length;
+                let totalCols = 8 + Object.keys(item.extras).length;
                 
                 let originalItemsHTML = "";
                 for(let key in item.rawOriginal) {
@@ -680,7 +1105,7 @@
                 trOriginal.innerHTML = `
                     <td colspan="${totalCols}">
                         <div class="original-box">
-                            <span style="font-weight:700; color:var(--text-muted);">📄 DATOS PURA CARGADOS ORIGINALMENTE (FILA ${item.id}):</span>
+                            <span style="font-weight:700; color:var(--text-muted);">📄 DATOS CARGADOS ORIGINALMENTE (FILA ${item.id}):</span>
                             <div class="original-grid">${originalItemsHTML}</div>
                         </div>
                     </td>
@@ -718,11 +1143,29 @@
     function arreglarTel(index, accion) {
         let item = datosProcesados[index];
         if (accion === 'borrarTel') item.tel = "";
+        else if (accion === 'quitarCeroInternoArgentina') item.tel = "549" + item.tel.substring(4);
+        else if (accion === 'quitarCeroYAgregar549') item.tel = "549" + item.tel.replace(/^0+/, "");
+        else if (accion === 'insertar9En5411') item.tel = "54911" + item.tel.substring(4);
+        else if (accion === 'insertar9EnChile') item.tel = "569" + item.tel.substring(2);
+        else if (accion === 'insertar9EnUruguay') item.tel = "5989" + item.tel.substring(3);
         else if (accion === 'agregar549') item.tel = "549" + item.tel;
         else if (accion === 'insertar11Argentina') item.tel = "54911" + item.tel.substring(3);
         else if (accion === 'cambiarA11') item.tel = "54911" + item.tel.substring(5);
         else if (accion === 'sacar15Interno') item.tel = item.tel.replace("15", "");
         else if (accion === 'agregar57') item.tel = "57" + item.tel;
+        else if (accion === 'agregar55') item.tel = "55" + item.tel;
+        else if (accion === 'agregar34') item.tel = "34" + item.tel;
+        else if (accion === 'agregar1') item.tel = "1" + item.tel;
+        else if (accion === 'agregar52') item.tel = "52" + item.tel;
+        else if (accion === 'agregar351') item.tel = "351" + item.tel;
+        else if (accion === 'agregar506') item.tel = "506" + item.tel;
+        else if (accion === 'agregar507') item.tel = "507" + item.tel;
+        else if (accion === 'agregar56') item.tel = "56" + item.tel;
+        else if (accion === 'agregar598') item.tel = "598" + item.tel;
+        else if (accion === 'agregar51') item.tel = "51" + item.tel;
+        else if (accion === 'agregar595') item.tel = "595" + item.tel;
+        else if (accion === 'agregar593') item.tel = "593" + item.tel;
+        else if (accion === 'agregar58') item.tel = "58" + item.tel;
 
         validarItemUnificado(item);
         evaluarDuplicados();
@@ -731,10 +1174,11 @@
 
     function aplicarSugerenciasMasivas() {
         let contador = 0;
-        const pais = document.getElementById('paisSelect').value;
 
         datosProcesados.forEach((item) => {
+            if (item.omitoError) return;
             let modificado = false;
+            const pais = item.paisCalculado || document.getElementById('paisSelect').value;
 
             // --- Reglas de Teléfono Masivas ---
             if (item.errorTel === "Teléfono inválido") { 
@@ -742,27 +1186,35 @@
                 modificado = true; 
             } 
             else if (pais === "AR" && item.tel) {
-                if (item.errorTel === "Falta prefijo (549)") { 
-                    item.tel = "549" + item.tel; 
-                    modificado = true; 
-                } 
-                else if (item.errorTel === "Agregar 11 despues de 549") { 
-                    item.tel = "54911" + item.tel.substring(3); 
-                    modificado = true; 
-                } 
-                else if (item.errorTel === "Reemplazar 54915 por 54911") { 
-                    item.tel = "54911" + item.tel.substring(5); 
-                    modificado = true; 
-                } 
-                else if (item.errorTel === "Remover 15 interno sobrante") { 
-                    item.tel = item.tel.replace("15", ""); 
-                    modificado = true; 
-                }
+                if (item.errorTel === "Remover 0 sobrante después de 549 (5490...)") { item.tel = "549" + item.tel.substring(4); modificado = true; }
+                else if (item.errorTel === "Remover 0 inicial y agregar prefijo (549)") { item.tel = "549" + item.tel.replace(/^0+/, ""); modificado = true; }
+                else if (item.errorTel === "Agregar 9 despues de 54 (54911)") { item.tel = "54911" + item.tel.substring(4); modificado = true; }
+                else if (item.errorTel === "Falta prefijo (549)") { item.tel = "549" + item.tel; modificado = true; } 
+                else if (item.errorTel === "Agregar 11 despues de 549") { item.tel = "54911" + item.tel.substring(3); modificado = true; } 
+                else if (item.errorTel === "Reemplazar 54915 por 54911") { item.tel = "54911" + item.tel.substring(5); modificado = true; } 
+                else if (item.errorTel === "Remover 15 interno sobrante") { item.tel = item.tel.replace("15", ""); modificado = true; }
             } 
-            else if (pais === "CO" && item.tel && item.errorTel === "Falta prefijo país (57)") {
-                item.tel = "57" + item.tel;
-                modificado = true;
+            else if (pais === "CL" && item.tel) {
+                if (item.errorTel === "Agregar 9 despues de 56 (569)") { item.tel = "569" + item.tel.substring(2); modificado = true; }
+                else if (item.errorTel === "Falta prefijo país (56)") { item.tel = "56" + item.tel; modificado = true; }
             }
+            else if (pais === "UY" && item.tel) {
+                if (item.errorTel === "Agregar 9 despues de 598 (5989)") { item.tel = "5989" + item.tel.substring(3); modificado = true; }
+                else if (item.errorTel === "Falta prefijo país (598)") { item.tel = "598" + item.tel; modificado = true; }
+            }
+            else if (pais === "PE" && item.tel && item.errorTel === "Falta prefijo país (51)") { item.tel = "51" + item.tel; modificado = true; }
+            else if (pais === "PY" && item.tel && item.errorTel === "Falta prefijo país (595)") { item.tel = "595" + item.tel; modificado = true; }
+            else if (pais === "EC" && item.tel && item.errorTel === "Falta prefijo país (593)") { item.tel = "593" + item.tel; modificado = true; }
+            else if (pais === "VE" && item.tel && item.errorTel === "Falta prefijo país (58)") { item.tel = "58" + item.tel; modificado = true; }
+            else if (pais === "CO" && item.tel && item.errorTel === "Falta prefijo país (57)") { item.tel = "57" + item.tel; modificado = true; }
+            else if (pais === "BR" && item.tel && item.errorTel === "Falta prefijo país (55)") { item.tel = "55" + item.tel; modificado = true; }
+            else if (pais === "ES" && item.tel && item.errorTel === "Falta prefijo país (34)") { item.tel = "34" + item.tel; modificado = true; }
+            else if (pais === "US" && item.tel && item.errorTel === "Falta prefijo país (1)") { item.tel = "1" + item.tel; modificado = true; }
+            else if (pais === "MX" && item.tel && item.errorTel === "Falta prefijo país (52)") { item.tel = "52" + item.tel; modificado = true; }
+            else if (pais === "PT" && item.tel && item.errorTel === "Falta prefijo país (351)") { item.tel = "351" + item.tel; modificado = true; }
+            else if (pais === "CR" && item.tel && item.errorTel === "Falta prefijo país (506)") { item.tel = "506" + item.tel; modificado = true; }
+            else if (pais === "PA" && item.tel && item.errorTel === "Falta prefijo país (507)") { item.tel = "507" + item.tel; modificado = true; }
+            else if (pais === "DO" && item.tel && item.errorTel === "Falta prefijo país (1)") { item.tel = "1" + item.tel; modificado = true; }
 
             // --- Reglas de Correo Masivas ---
             if (item.correo) {
@@ -774,7 +1226,7 @@
                 else if (item.errorCorreo === "Falta punto antes de com (.com)") {
                     item.correo = item.correo.replace(/com$/i, ".com");
                 } 
-                else if (item.errorCorreo === "Falta agregar extensión (.com)") { // <-- AÑADIDO AQUÍ
+                else if (item.errorCorreo === "Falta agregar extensión (.com)") {
                     item.correo = item.correo + ".com";
                 } 
                 else if (item.errorCorreo === "Corregir a @gmail.com") {
@@ -819,18 +1271,24 @@
 
     function exportarCSV() {
         const datosValidos = datosProcesados.filter(item => item.tel || item.correo);
-        let columnasSalida = ["Nombre", "Apellido", "Telefono", "Correo"];
+        let columnasSalida = ["Nombre", "Apellido", "Telefono", "Correo", "Pais"];
         
         columnasHeaders.forEach((header, colIdx) => {
-            if (colIdx !== mapeoColumnas.nombre && colIdx !== mapeoColumnas.apellido && colIdx !== mapeoColumnas.tel && colIdx !== mapeoColumnas.correo) {
+            if (colIdx !== mapeoColumnas.nombre && colIdx !== mapeoColumnas.apellido && colIdx !== mapeoColumnas.tel && colIdx !== mapeoColumnas.correo && colIdx !== mapeoColumnas.pais) {
                 columnasSalida.push(header);
             }
         });
 
         let filasCSV = datosValidos.map(item => {
-            let filaObj = { "Nombre": item.nombre, "Apellido": item.apellido, "Telefono": item.tel, "Correo": item.correo };
+            let filaObj = { 
+                "Nombre": item.nombre, 
+                "Apellido": item.apellido, 
+                "Telefono": item.tel, 
+                "Correo": item.correo,
+                "Pais": item.paisCalculado
+            };
             columnasHeaders.forEach((header, colIdx) => {
-                if (colIdx !== mapeoColumnas.nombre && colIdx !== mapeoColumnas.apellido && colIdx !== mapeoColumnas.tel && colIdx !== mapeoColumnas.correo) {
+                if (colIdx !== mapeoColumnas.nombre && colIdx !== mapeoColumnas.apellido && colIdx !== mapeoColumnas.tel && colIdx !== mapeoColumnas.correo && colIdx !== mapeoColumnas.pais) {
                     filaObj[header] = item.extras[colIdx] || "";
                 }
             });
@@ -842,7 +1300,7 @@
 
         const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvOutput], { type: "text/csv;charset=utf-8;" });
         const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
+        const url = URL.callObjectURL(blob);
         
         link.setAttribute("href", url);
         link.setAttribute("download", `${nombreArchivoOriginal}-normalizado.csv`);
