@@ -1269,45 +1269,47 @@
         else datosProcesados[index].extras[colIdx] = valor.trim();
     }
 
-    function exportarCSV() {
-        const datosValidos = datosProcesados.filter(item => item.tel || item.correo);
-        let columnasSalida = ["Nombre", "Apellido", "Telefono", "Correo", "Pais"];
-        
+   function exportarCSV() {
+    const datosValidos = datosProcesados.filter(item => item.tel || item.correo);
+    let columnasSalida = ["Nombre", "Apellido", "Telefono", "Correo", "Pais"];
+    
+    columnasHeaders.forEach((header, colIdx) => {
+        if (colIdx !== mapeoColumnas.nombre && colIdx !== mapeoColumnas.apellido && colIdx !== mapeoColumnas.tel && colIdx !== mapeoColumnas.correo && colIdx !== mapeoColumnas.pais) {
+            columnasSalida.push(header);
+        }
+    });
+
+    let filasCSV = datosValidos.map(item => {
+        let filaObj = { 
+            "Nombre": item.nombre, 
+            "Apellido": item.apellido, 
+            "Telefono": item.tel, 
+            "Correo": item.correo,
+            "Pais": item.paisCalculado
+        };
         columnasHeaders.forEach((header, colIdx) => {
             if (colIdx !== mapeoColumnas.nombre && colIdx !== mapeoColumnas.apellido && colIdx !== mapeoColumnas.tel && colIdx !== mapeoColumnas.correo && colIdx !== mapeoColumnas.pais) {
-                columnasSalida.push(header);
+                filaObj[header] = item.extras[colIdx] || "";
             }
         });
+        return filaObj;
+    });
 
-        let filasCSV = datosValidos.map(item => {
-            let filaObj = { 
-                "Nombre": item.nombre, 
-                "Apellido": item.apellido, 
-                "Telefono": item.tel, 
-                "Correo": item.correo,
-                "Pais": item.paisCalculado
-            };
-            columnasHeaders.forEach((header, colIdx) => {
-                if (colIdx !== mapeoColumnas.nombre && colIdx !== mapeoColumnas.apellido && colIdx !== mapeoColumnas.tel && colIdx !== mapeoColumnas.correo && colIdx !== mapeoColumnas.pais) {
-                    filaObj[header] = item.extras[colIdx] || "";
-                }
-            });
-            return filaObj;
-        });
+    const worksheet = XLSX.utils.json_to_sheet(filasCSV, { header: columnasSalida });
+    const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
 
-        const worksheet = XLSX.utils.json_to_sheet(filasCSV, { header: columnasSalida });
-        const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
-
-        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvOutput], { type: "text/csv;charset=utf-8;" });
-        const link = document.createElement("a");
-        const url = URL.callObjectURL(blob);
-        
-        link.setAttribute("href", url);
-        link.setAttribute("download", `${nombreArchivoOriginal}-normalizado.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvOutput], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    
+    // CAMBIO AQUÍ: Usar URL.createObjectURL en vez de URL.callObjectURL
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${nombreArchivoOriginal}-normalizado.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
 
     function irAlSiguienteError() {
         const filasErrores = document.querySelectorAll('#resultBody tr.has-error');
